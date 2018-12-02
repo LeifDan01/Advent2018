@@ -13,7 +13,6 @@ var counts : Set<Int> = []
 var count = 0
 while (!found){
     for line in lines {
-//        let number = Int(line)
         count = count + line
         if counts.contains(count) && found == false {
             answer = count
