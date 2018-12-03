@@ -1,7 +1,9 @@
-import UIKit
+import Foundation
 
-let fileURL = Bundle.main.url(forResource: "test", withExtension: "txt")
-let content = try String(contentsOf: fileURL!, encoding: String.Encoding.utf8)
+let currentDirectoryURL = URL(fileURLWithPath: "///Users/leif/Desktop/AdventOfCode/Day03/")
+let url = URL(fileURLWithPath: "input.txt", relativeTo: currentDirectoryURL)
+//let fileURL = Bundle.main.url(forResource: "input", withExtension: "txt")
+let content = try String(contentsOf: url, encoding: String.Encoding.utf8)
 
 struct Piece {
     let id: String
@@ -30,10 +32,10 @@ struct Piece {
     }
     
     func collidesWith(piece: Piece) -> Bool {
-//        print("\(self)  \(piece)")
+        //        print("\(self)  \(piece)")
         for x in 1...width {
             for y in 1...height {
-//                print("\(x + originWidth) \(y + originHeight)")
+                //                print("\(x + originWidth) \(y + originHeight)")
                 if piece.contains(x: x + originWidth, y: y + originHeight) {
                     return true
                 }
@@ -63,4 +65,3 @@ for line1 in lines {
         print("found the ONE: \(line1)")
     }
 }
-
