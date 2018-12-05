@@ -1,67 +1,43 @@
 import Foundation
 
-let currentDirectoryURL = URL(fileURLWithPath: "///Users/leif/Desktop/AdventOfCode/Day03/")
+let currentDirectoryURL = URL(fileURLWithPath: "///Users/leif/Desktop/AdventOfCode/Day05/")
 let url = URL(fileURLWithPath: "input.txt", relativeTo: currentDirectoryURL)
 //let fileURL = Bundle.main.url(forResource: "input", withExtension: "txt")
 let content = try String(contentsOf: url, encoding: String.Encoding.utf8)
 
-struct Piece {
-    let id: String
-    var originWidth : Int
-    var originHeight : Int
-    var width: Int
-    var height: Int
+
+var options = [String: Int]()
+for nchar in 97...122 {
+    let char = String(UnicodeScalar(nchar)!)
     
-    init(line: String) {
-        let items = line.components(separatedBy: " ")
-        id = items[0]
-        let origin = items[2].components(separatedBy: ",")
-        originWidth = Int(origin[0])!
-        originHeight = Int(origin[1].dropLast())!
-        let dimensions = items[3].components(separatedBy: "x")
-        width = Int(dimensions[0])!
-        height = Int(dimensions[1])!
-    }
+    var line = content
+    line = line.replacingOccurrences(of: char, with: "")
+    line = line.replacingOccurrences(of: char.uppercased(), with: "")
+    //remove char
     
-    func contains(x: Int, y: Int) -> Bool {
-        var inX = false
-        var inY = false
-        inX = x >= originWidth && x <= originWidth + width
-        inY = y >= originHeight && y <= originHeight + height
-        return inX && inY
-    }
-    
-    func collidesWith(piece: Piece) -> Bool {
-        //        print("\(self)  \(piece)")
-        for x in 1...width {
-            for y in 1...height {
-                //                print("\(x + originWidth) \(y + originHeight)")
-                if piece.contains(x: x + originWidth, y: y + originHeight) {
-                    return true
-                }
+    var found = true
+    while found
+    {
+        found = false
+        for index in line.characters.indices {
+            if found || index == line.characters.endIndex {break}
+            let char1 = String(line[index])
+            let nextI = line.characters.index(after: index)
+            if nextI == line.characters.endIndex {break}
+            let char2 = String(line[nextI])
+            if (char1.uppercased() != char1 && char1.uppercased() == char2) ||
+                (char2.uppercased() != char2 && char2.uppercased() == char1) {
+                let nnI = line.characters.index(after: nextI)
+                line = String(line[..<index] + line[nnI...])
+                //            print(line)
+                found = true
             }
         }
-        return false
-    }
-}
-
-var lines: [Piece] = []
-content.enumerateLines { line, _ in
-    lines.append(Piece(line: line))
-}
-var used = Set<String>()
-
-for line1 in lines {
-    var collision = false
-    for line2 in lines {
-        if line1.id != line2.id {
-            if line1.collidesWith(piece: line2) {
-                collision = true
-                break
-            }
+        
+        if !found {
+            options[char] = line.count
+            print("\(char) got \(line.count)")
         }
     }
-    if collision == false {
-        print("found the ONE: \(line1)")
-    }
 }
+print(options)
