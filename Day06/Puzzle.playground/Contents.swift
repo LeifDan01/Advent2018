@@ -1,6 +1,6 @@
 import UIKit
 
-let fileURL = Bundle.main.url(forResource: "input", withExtension: "txt")
+let fileURL = Bundle.main.url(forResource: "test", withExtension: "txt")
 let content = try String(contentsOf: fileURL!, encoding: String.Encoding.utf8)
 
 class Piece : CustomStringConvertible {
@@ -26,6 +26,10 @@ class Piece : CustomStringConvertible {
         self.id = id
         self.x = Int(items[0])!
         self.y = Int(items[1])!
+    }
+    
+    func distanceTo(_ point: (Int, Int)) -> Int {
+        return distanceBetween(first: coords(), second: point)
     }
     
     func distanceBetween(first: (Int, Int), second: (Int, Int)) -> Int {
@@ -129,16 +133,57 @@ content.enumerateLines { line, _ in
     lines.append(Piece(id: id, line: line))
 }
 
-//find borders
+var maxX = 0
+var maxY = 0
 for line in lines {
-    for other in lines {
-        if line.id != other.id {
-            line.setBorders(other)
+    maxX = max(maxX, line.x)
+    maxY = max(maxY, line.y)
+}
+
+func distancesSumTo(_ point: (Int, Int)) -> Int {
+    var distance = 0
+    for line in lines {
+        distance += line.distanceTo(point)
+    }
+    return distance
+}
+
+print(maxX)
+print(maxY)
+
+//print(distancesSumTo((0, 0)))
+//print(distancesSumTo((maxX, maxY)))
+//print(distancesSumTo((maxX+1, maxY)))
+//print(distancesSumTo((maxX, maxY+1)))
+//print(distancesSumTo((maxX+1, maxY+1)))
+
+var maxDis = 10000
+var points = 0
+
+for x in 0...maxX {
+    for y in 0...maxY {
+        var sum = distancesSumTo((x, y))
+        if sum < maxDis {
+            points += 1
+            print("HIT ...........(\(x), \(y)): \(sum)")
+        } else {
+            print("(\(x), \(y)): \(sum)")
         }
     }
 }
 
-for line in lines {
-    line.size()
-}
+print(points)
+
+//find borders
+//for line in lines {
+//    for other in lines {
+//        if line.id != other.id {
+//            line.setBorders(other)
+//        }
+//    }
+//}
+//
+//for line in lines {
+//    line.size()
+//}
 //print(lines)
