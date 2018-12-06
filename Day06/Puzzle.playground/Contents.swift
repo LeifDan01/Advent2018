@@ -1,6 +1,6 @@
 import UIKit
 
-let fileURL = Bundle.main.url(forResource: "test", withExtension: "txt")
+let fileURL = Bundle.main.url(forResource: "input", withExtension: "txt")
 let content = try String(contentsOf: fileURL!, encoding: String.Encoding.utf8)
 
 class Piece : CustomStringConvertible {
@@ -34,10 +34,15 @@ class Piece : CustomStringConvertible {
     
     func isClosestTo(_ point: (Int, Int)) -> Bool {
         let distance = distanceBetween(first: self.coords(), second: point)
-        if distance >= distanceBetween(first: top!, second: point) { return false}
-        if distance >= distanceBetween(first: bottom!, second: point) { return false}
-        if distance >= distanceBetween(first: left!, second: point) { return false}
-        if distance >= distanceBetween(first: right!, second: point) { return false}
+        for other in lines {
+            if other.id != id {
+                if distance >= distanceBetween(first: other.coords(), second: point) { return false}
+            }
+        }
+//        if distance >= distanceBetween(first: top!, second: point) { return false}
+//        if distance >= distanceBetween(first: bottom!, second: point) { return false}
+//        if distance >= distanceBetween(first: left!, second: point) { return false}
+//        if distance >= distanceBetween(first: right!, second: point) { return false}
         return true
     }
     
