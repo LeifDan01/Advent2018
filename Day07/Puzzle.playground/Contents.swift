@@ -22,21 +22,24 @@ class Piece : CustomStringConvertible {
 
 class Step : CustomStringConvertible  {
     var item : String
+    var workToDo: Int
     var preReq : [String] = []
     
     var description: String {
-        return "\(item) requires \(preReq)"
+        return "\(item) requires \(preReq) for \(workToDo)"
         //        return "\n(\(x), \(y)) Value: \(size())"
         //        return "(\(x), \(y)) T: \(top) B: \(bottom) L: \(left) R: \(right)\n"
     }
     
     init(_ me: String) {
         item = me
+        workToDo = Int(me.characters.first!.unicodeScalars.first!.value) - 4
     }
     
     init(_ me: String, req: String) {
         item = me
         preReq.append(req)
+        workToDo = Int(me.characters.first!.unicodeScalars.first!.value) - 4
     }
 }
 
@@ -68,17 +71,33 @@ for line in lines{
     }
 }
 
-var answer : [String] = []
+var done : [String] = []
+var inWork : [Step] = []
 
-for i in 0..<steps.count {
+var workers = 5
+var count = 0
+
+while true {
+    count += 1
+    print("Steps: \(steps)")
+    
+    // find things to work on
     var options : [Step] = []
     for step in steps {
-        if answer.contains(step.item){
+        if done.contains(step.item){
             continue
         }
+        var inInWork = false
+        for work in inWork {
+            if work.item == step.item {
+                inInWork = true
+            }
+        }
+        if inInWork {continue}
+        
         var passed = true
         for req in step.preReq {
-            if !(answer.contains(req)) {
+            if !(done.contains(req)) {
                 passed = false
             }
         }
@@ -86,11 +105,40 @@ for i in 0..<steps.count {
             options.append(step)
         }
     }
+
     options.sort { (first, second) -> Bool in
         first.item < second.item
     }
-    answer.append(options[0].item)
+    
+    //put tihng to work
+    while options.count > 0 && inWork.count < workers {
+        inWork.append(options.remove(at: 0))
+    }
+    
+    print("InWork: \(inWork)")
+    //work
+    for step in inWork {
+        step.workToDo -= 1
+    }
+    
+    //clear out the debris
+    var found = true
+    while found {
+        found = false
+        for (index, step) in inWork.enumerated() {
+            if step.workToDo == 0 {
+                found = true
+                done.append(step.item)
+                inWork.remove(at: index)
+                break
+            }
+        }
+    }
+    
+    if done.count == steps.count {
+        break
+    }
 }
 
-print(steps)
-print(answer)
+print(done)
+print(count)
