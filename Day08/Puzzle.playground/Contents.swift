@@ -22,9 +22,7 @@ class Node : CustomStringConvertible {
         print("get value for \(id)")
         var sum = 0
         if nodeIds.count == 0 {
-            for meta in metas {
-                sum += meta
-            }
+            sum += metas.reduce(0){$0 + $1}
             print("value for \(id) is \(sum)")
             return sum
         } else {
@@ -40,16 +38,17 @@ class Node : CustomStringConvertible {
     }
 }
 
-var values: [Int] = []
 
 let items = content.components(separatedBy: " ")
 print(items.count)
+var values = [Int](repeating: 0, count: items.count)
+var theIndex = 0
 for item in items {
     if let value = Int(item) {
-        values.append(value)
+        values[theIndex] = value
     }
+    theIndex += 1
 }
-
 print(values)
 
 var id = 0
