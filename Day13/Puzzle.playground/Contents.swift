@@ -20,6 +20,7 @@ func turn(current: String, number: Int) -> String {
 
 var world = [[String]]()
 class Cart : CustomStringConvertible {
+    let id: Int
     var x : Int
     var y : Int
     var direction : String
@@ -71,7 +72,8 @@ class Cart : CustomStringConvertible {
         }
     }
     
-    init(x: Int, y: Int, direction: String) {
+    init(id: Int, x: Int, y: Int, direction: String) {
+        self.id = id
         self.x = x
         self.y = y
         self.direction = direction
@@ -80,6 +82,7 @@ class Cart : CustomStringConvertible {
 
 var carts = [Cart]()
 var lineNumber = 0
+var id = 0
 content.enumerateLines { line, _ in
     world.append([])
     var columNumber = 0
@@ -87,31 +90,37 @@ content.enumerateLines { line, _ in
         var entry = String(line[index])
         switch entry {
         case "<":
-            carts.append(Cart(x: columNumber, y: lineNumber, direction: entry))
+            carts.append(Cart(id: id, x: columNumber, y: lineNumber, direction: entry))
             entry = "-"
         case ">":
-            carts.append(Cart(x: columNumber, y: lineNumber, direction: entry))
+            carts.append(Cart(id: id, x: columNumber, y: lineNumber, direction: entry))
             entry = "-"
         case "^":
-            carts.append(Cart(x: columNumber, y: lineNumber, direction: entry))
+            carts.append(Cart(id: id, x: columNumber, y: lineNumber, direction: entry))
             entry = "|"
         case "v":
-            carts.append(Cart(x: columNumber, y: lineNumber, direction: entry))
+            carts.append(Cart(id: id, x: columNumber, y: lineNumber, direction: entry))
             entry = "|"
         default:
             break
         }
         world[lineNumber].append(entry)
         columNumber += 1
+        id += 1
     }
     lineNumber += 1
 }
-
-print(world)
-print(carts)
-for _ in 1...14 {
+var notFound = true
+while notFound {
     for cart in carts {
         cart.move(world: world)
+        
+        for otherCart in carts {
+            if cart.id == otherCart.id { continue }
+            if cart.x == otherCart.x && cart.y == otherCart.y {
+                notFound = false
+                print("COLLISION AT (\(cart.x),\(cart.y))")
+            }
+        }
     }
-    print(carts)
 }
