@@ -136,9 +136,9 @@ while carts.count > 1 {
         carts.remove(at: carts.firstIndex{removeId == $0.id}!)
     }
 }
-carts[0].move(world: world)
 print(carts)
 //44,81
 //43,81
 //135, 83
 //135, 82
+//135, 84
