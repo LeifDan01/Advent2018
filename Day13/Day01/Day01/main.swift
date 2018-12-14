@@ -89,20 +89,10 @@ content.enumerateLines { line, _ in
     world.append([])
     var columNumber = 0
     for index in line.characters.indices {
-        var entry = String(line[index])
+        let entry = String(line[index])
         switch entry {
-        case "<":
+        case "<", ">", "v", "^":
             carts.append(Cart(id: id, x: columNumber, y: lineNumber, direction: entry))
-            entry = "-"
-        case ">":
-            carts.append(Cart(id: id, x: columNumber, y: lineNumber, direction: entry))
-            entry = "-"
-        case "^":
-            carts.append(Cart(id: id, x: columNumber, y: lineNumber, direction: entry))
-            entry = "|"
-        case "v":
-            carts.append(Cart(id: id, x: columNumber, y: lineNumber, direction: entry))
-            entry = "|"
         default:
             break
         }
@@ -117,21 +107,30 @@ var iter = 0
 while carts.count > 1 {
     iter += 1
     var cartsToRemove = [Int]()
-    for cart in carts {
-        if cartsToRemove.contains(cart.id) { continue }
+    carts.sort{
+        if $0.y == $1.y {
+            return $0.x < $1.x
+        }
+        return $0.y < $1.y
+    }
+    print(carts)
+    let cartIDs = carts.map{$0.id}
+    for cartID in cartIDs {
+//        if cartsToRemove.contains(cartID) { continue }
+        let cart = carts.first{cartID == $0.id}!
         cart.move(world: world)
         
-        for otherCart in carts {
-            if cart.id == otherCart.id { continue }
-            if cartsToRemove.contains(otherCart.id) { continue }
+        for otherCartID in cartIDs {
+            if cartID == otherCartID { continue }
+//            if cartsToRemove.contains(otherCartID) { continue }
+            let otherCart = carts.first{otherCartID == $0.id}!
             if cart.x == otherCart.x && cart.y == otherCart.y {
-                cartsToRemove.append(cart.id)
-                cartsToRemove.append(otherCart.id)
+                cartsToRemove.append(cartID)
+                cartsToRemove.append(otherCartID)
                 print("on \(iter) COLLISION AT (\(cart.x),\(cart.y))")
             }
         }
     }
-    
     for removeId in cartsToRemove {
         carts.remove(at: carts.firstIndex{removeId == $0.id}!)
     }
