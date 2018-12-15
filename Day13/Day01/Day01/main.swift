@@ -116,13 +116,13 @@ while carts.count > 1 {
     print(carts)
     let cartIDs = carts.map{$0.id}
     for cartID in cartIDs {
-//        if cartsToRemove.contains(cartID) { continue }
+        if cartsToRemove.contains(cartID) { continue }
         let cart = carts.first{cartID == $0.id}!
         cart.move(world: world)
         
         for otherCartID in cartIDs {
             if cartID == otherCartID { continue }
-//            if cartsToRemove.contains(otherCartID) { continue }
+            if cartsToRemove.contains(otherCartID) { continue }
             let otherCart = carts.first{otherCartID == $0.id}!
             if cart.x == otherCart.x && cart.y == otherCart.y {
                 cartsToRemove.append(cartID)
