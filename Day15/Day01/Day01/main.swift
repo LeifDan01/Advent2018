@@ -1,19 +1,35 @@
 import Foundation
 
 let currentDirectoryURL = URL(fileURLWithPath: "///Users/leif/Desktop/AdventOfCode/Day15/")
-let url = URL(fileURLWithPath: "test2.txt", relativeTo: currentDirectoryURL)
+let url = URL(fileURLWithPath: "input.txt", relativeTo: currentDirectoryURL)
 //let fileURL = Bundle.main.url(forResource: "input", withExtension: "txt")
 let content = try String(contentsOf: url, encoding: String.Encoding.utf8)
 
 
 var world = [[String]]()
+
+var traveled = [[Int]]()
 var bestPath : [(Int, Int)]? = nil
 var bestPathLength = Int.max
+var suggestedTarget = [(Int, Int)]()
 
 func path(from: Thing, to: Thing, withMaxMoves: Int, inWorld: [[String]], pathSoFar: [(Int, Int)] = []) -> [(Int, Int)]? {
     if pathSoFar.count == 0 {
         bestPath = nil
         bestPathLength = Int.max
+        traveled = []
+        for (y, line) in world.enumerated() {
+            traveled.append([])
+            for _ in line {
+                traveled[y].append(Int.max)
+            }
+        }
+    }
+    
+    if traveled[from.y][from.x] < pathSoFar.count {
+        return nil
+    } else {
+        traveled[from.y][from.x] = pathSoFar.count
     }
     
     let distance = abs(to.x - from.x) + abs(to.y - from.y)
@@ -95,7 +111,6 @@ func path(from: Thing, to: Thing, withMaxMoves: Int, inWorld: [[String]], pathSo
             }
         }
     }
-//    print("bestpath for \(from.id) is \(bestPath)")
     return bestPath
 }
 
@@ -172,10 +187,8 @@ class Thing : CustomStringConvertible {
         
         //attack
         if targetDis == 0 && targets.count > 0 {
-            // ? does this work
             var option = targets.map{$0.0}
-            option.sort(by: readOrder)
-            option.sort{$0.hp < $1.hp}
+            option.sort{$0.hp != $1.hp ? $0.hp < $1.hp : ($0.y == $1.y ? $0.x < $1.x : $0.y < $1.y)}
             return option[0].hit(world: &world)
         }
         return nil
@@ -237,7 +250,9 @@ while (elves.count > 0 && goblins.count > 0) {
     for thing in orderedThings {
         if killed.contains(thing.id) { continue }
         print("start \(thing.id)")
-        if let kill = thing.takeTurn(elves: elves, goblins: goblins, world: &world) {
+        let aliveElves = elves.filter{!killed.contains($0.id)}
+        let aliveGoblins = goblins.filter{!killed.contains($0.id)}
+        if let kill = thing.takeTurn(elves: aliveElves, goblins: aliveGoblins, world: &world) {
             print("KILLED \(kill)")
             killed.append(kill)
         }
