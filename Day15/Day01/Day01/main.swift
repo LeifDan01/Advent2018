@@ -42,15 +42,10 @@ func path(from: Thing, to: Thing, withMaxMoves: Int, inWorld: [[String]], pathSo
         return nil
     } else {
         if inWorld[from.y - 1][from.x] == "." {
-            var newWorld = inWorld
             let fromCopy = from.copy()
-            var newPath = pathSoFar
-            newWorld[fromCopy.y][fromCopy.x] = "."
             fromCopy.y -= 1
             if !pathSoFar.contains(where: {$0.0 == fromCopy.x && $0.1 == fromCopy.y}) {
-                newWorld[fromCopy.y][fromCopy.x] = from.type
-                newPath.append((fromCopy.x, fromCopy.y))
-                if let tryPath = path(from: fromCopy, to: to, withMaxMoves: withMaxMoves, inWorld: newWorld, pathSoFar: newPath) {
+                if let tryPath = path(from: fromCopy, to: to, withMaxMoves: withMaxMoves, inWorld: inWorld, pathSoFar: pathSoFar + [(fromCopy.x, fromCopy.x)]) {
                     if tryPath.count < bestPathLength {
                         bestPath = tryPath
                         bestPathLength = tryPath.count
@@ -59,15 +54,10 @@ func path(from: Thing, to: Thing, withMaxMoves: Int, inWorld: [[String]], pathSo
             }
         }
         if inWorld[from.y][from.x - 1] == "." {
-            var newWorld = inWorld
             let fromCopy = from.copy()
-            var newPath = pathSoFar
-            newWorld[fromCopy.y][fromCopy.x] = "."
             fromCopy.x -= 1
             if !pathSoFar.contains(where: {$0.0 == fromCopy.x && $0.1 == fromCopy.y}) {
-                newWorld[fromCopy.y][fromCopy.x] = from.type
-                newPath.append((fromCopy.x, fromCopy.y))
-                if let tryPath = path(from: fromCopy, to: to, withMaxMoves: withMaxMoves, inWorld: newWorld, pathSoFar: newPath) {
+                if let tryPath = path(from: fromCopy, to: to, withMaxMoves: withMaxMoves, inWorld: inWorld, pathSoFar: pathSoFar + [(fromCopy.x, fromCopy.x)]) {
                     if tryPath.count < bestPathLength {
                         bestPath = tryPath
                         bestPathLength = tryPath.count
@@ -76,15 +66,10 @@ func path(from: Thing, to: Thing, withMaxMoves: Int, inWorld: [[String]], pathSo
             }
         }
         if inWorld[from.y][from.x + 1] == "." {
-            var newWorld = inWorld
             let fromCopy = from.copy()
-            var newPath = pathSoFar
-            newWorld[fromCopy.y][fromCopy.x] = "."
             fromCopy.x += 1
             if !pathSoFar.contains(where: {$0.0 == fromCopy.x && $0.1 == fromCopy.y}) {
-                newWorld[fromCopy.y][fromCopy.x] = from.type
-                newPath.append((fromCopy.x, fromCopy.y))
-                if let tryPath = path(from: fromCopy, to: to, withMaxMoves: withMaxMoves, inWorld: newWorld, pathSoFar: newPath) {
+                if let tryPath = path(from: fromCopy, to: to, withMaxMoves: withMaxMoves, inWorld: inWorld, pathSoFar: pathSoFar + [(fromCopy.x, fromCopy.x)]) {
                     if tryPath.count < bestPathLength {
                         bestPath = tryPath
                         bestPathLength = tryPath.count
@@ -93,15 +78,10 @@ func path(from: Thing, to: Thing, withMaxMoves: Int, inWorld: [[String]], pathSo
             }
         }
         if inWorld[from.y + 1][from.x] == "." {
-            var newWorld = inWorld
             let fromCopy = from.copy()
-            var newPath = pathSoFar
-            newWorld[fromCopy.y][fromCopy.x] = "."
             fromCopy.y += 1
             if !pathSoFar.contains(where: {$0.0 == fromCopy.x && $0.1 == fromCopy.y}) {
-                newWorld[fromCopy.y][fromCopy.x] = from.type
-                newPath.append((fromCopy.x, fromCopy.y))
-                if let tryPath = path(from: fromCopy, to: to, withMaxMoves: withMaxMoves, inWorld: newWorld, pathSoFar: newPath) {
+                if let tryPath = path(from: fromCopy, to: to, withMaxMoves: withMaxMoves, inWorld: inWorld, pathSoFar: pathSoFar + [(fromCopy.x, fromCopy.x)]) {
                     if tryPath.count < bestPathLength {
                         bestPath = tryPath
                         bestPathLength = tryPath.count
@@ -122,34 +102,23 @@ func travelMapfor(x: Int, y: Int, world: [[String]]) -> [[Int]] {
             travelMap[y].append(Int.max)
         }
     }
+    travelMap[y][x] = 0
     traversMapFor(x: x, y: y, world: world, path: [])
     return travelMap
  }
 
 func traversMapFor(x: Int, y: Int, world: [[String]], path: [(Int, Int)]) {
-    if travelMap[y][x] < path.count {
-        return
+    let distance = path.count + 1
+    let options = [(y-1, x), (y, x-1), (y, x+1), (y+1, x)]
+    var moves = [(Int, Int)]()
+    for (ny, nx) in options {
+        if world[ny][nx] == "." && travelMap[ny][nx] > distance {
+            travelMap[ny][nx] = distance
+            moves.append((nx, ny))
+        }
     }
-    travelMap[y][x] = path.count
-    if world[y-1][x] == "." {
-        var newPath = path
-        newPath.append((x, y-1))
-        traversMapFor(x: x, y: y-1, world: world, path: newPath)
-    }
-    if world[y][x-1] == "." {
-        var newPath = path
-        newPath.append((x-1, y))
-        traversMapFor(x: x-1, y: y, world: world, path: newPath)
-    }
-    if world[y][x+1] == "." {
-        var newPath = path
-        newPath.append((x+1, y))
-        traversMapFor(x: x+1, y: y, world: world, path: newPath)
-    }
-    if world[y+1][x] == "." {
-        var newPath = path
-        newPath.append((x, y+1))
-        traversMapFor(x: x, y: y+1, world: world, path: newPath)
+    for (nx, ny) in moves {
+        traversMapFor(x: nx, y: ny, world: world, path: path + [(nx, ny)])
     }
 }
 
@@ -199,40 +168,40 @@ for line in world {
     print(line)
 }
 var round = 0
-print("")
-for line in travelMapfor(x: 11, y: 2, world: world) {
-    print(line)
-}
-//while (elves.count > 0 && goblins.count > 0) {
-//    //do iter
-//    var orderedThings = elves + goblins
-//    orderedThings.sort(by: readOrder)
-//
-//    var killed = [Int]()
-//    for thing in orderedThings {
-//        if killed.contains(thing.id) { continue }
-//        print("start \(thing.id)")
-//        let aliveElves = elves.filter{!killed.contains($0.id)}
-//        let aliveGoblins = goblins.filter{!killed.contains($0.id)}
-//        if let kill = thing.takeTurn(elves: aliveElves, goblins: aliveGoblins, world: &world) {
-//            print("KILLED \(kill)")
-//            killed.append(kill)
-//        }
-//    }
-//    for kill in killed {
-//        if let index = elves.firstIndex(where: {kill == $0.id}) {
-//            elves.remove(at: index)
-//        }
-//        if let index = goblins.firstIndex(where: {kill == $0.id}) {
-//            goblins.remove(at: index)
-//        }
-//    }
-//
-//    round += 1
-//    print("\nAfter Round \(round)")
-//    print(elves)
-//    print(goblins)
-//    for line in world {
-//        print(line)
-//    }
+//print("")
+//for line in travelMapfor(x: 7, y: 9, world: world) {
+//    print(line)
 //}
+while (elves.count > 0 && goblins.count > 0) {
+    //do iter
+    var orderedThings = elves + goblins
+    orderedThings.sort(by: readOrder)
+
+    var killed = [Int]()
+    for thing in orderedThings {
+        if killed.contains(thing.id) { continue }
+        print("start \(thing.id)")
+        let aliveElves = elves.filter{!killed.contains($0.id)}
+        let aliveGoblins = goblins.filter{!killed.contains($0.id)}
+        if let kill = thing.takeTurn(elves: aliveElves, goblins: aliveGoblins, world: &world) {
+            print("KILLED \(kill)")
+            killed.append(kill)
+        }
+    }
+    for kill in killed {
+        if let index = elves.firstIndex(where: {kill == $0.id}) {
+            elves.remove(at: index)
+        }
+        if let index = goblins.firstIndex(where: {kill == $0.id}) {
+            goblins.remove(at: index)
+        }
+    }
+
+    round += 1
+    print("\nAfter Round \(round)")
+    print(elves)
+    print(goblins)
+    for line in world {
+        print(line)
+    }
+}
