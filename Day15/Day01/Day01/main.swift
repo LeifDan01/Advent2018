@@ -5,7 +5,6 @@ let url = URL(fileURLWithPath: "input.txt", relativeTo: currentDirectoryURL)
 //let fileURL = Bundle.main.url(forResource: "input", withExtension: "txt")
 let content = try String(contentsOf: url, encoding: String.Encoding.utf8)
 
-
 var world = [[String]]()
 
 var traveled = [[Int]]()
@@ -114,84 +113,43 @@ func path(from: Thing, to: Thing, withMaxMoves: Int, inWorld: [[String]], pathSo
     return bestPath
 }
 
-class Thing : CustomStringConvertible {
-    let id: Int
-    let type: String
-    var x : Int
-    var y : Int
-    var hp = 200
-    
-    init(id: Int, type: String, x: Int, y: Int) {
-        self.id = id
-        self.type = type
-        self.x = x
-        self.y = y
-    }
-    
-    func copy() -> Thing {
-        return Thing(id: id, type: type, x: x, y: y)
-    }
-    
-    var description: String {
-        return "\(type)\(id) at (\(x), \(y)) with \(hp)"
-    }
-    
-    func hit(world: inout [[String]]) -> Int? {
-        hp -= 3
-        if hp < 0 {
-            world[y][x] = "."
-            return id
+var travelMap = [[Int]]()
+func travelMapfor(x: Int, y: Int, world: [[String]]) -> [[Int]] {
+    travelMap = []
+    for (y, line) in world.enumerated() {
+        travelMap.append([])
+        for _ in line {
+            travelMap[y].append(Int.max)
         }
-        return nil
     }
-    
-    func targetable(world: [[String]]) -> Bool {
-        return world[y-1][x] == "." || world[y][x-1] == "." || world[y][x+1] == "." || world[y+1][x] == "."
+    traversMapFor(x: x, y: y, world: world, path: [])
+    return travelMap
+ }
+
+func traversMapFor(x: Int, y: Int, world: [[String]], path: [(Int, Int)]) {
+    if travelMap[y][x] < path.count {
+        return
     }
-    
-    func takeTurn(elves: [Thing], goblins: [Thing], world: inout [[String]]) -> Int? {
-        //select target
-        var enemies = type == "G" ? elves : goblins
-        var targets = [(Thing, [(Int,Int)])]()
-        var targetDis = Int.max - 1
-        enemies.sort { (first, second) -> Bool in
-            let dist1 = abs(first.x - x) + abs(first.y - y)
-            let dist2 = abs(second.x - x) + abs(second.y - y)
-            return dist1 < dist2
-        }
-        for enemy in enemies {
-            //distance calculation needs to be done¬
-            print("from \(self) to \(enemy) with max \(targetDis)")
-            if let path = path(from: self, to: enemy, withMaxMoves: targetDis, inWorld: world) {
-                let distance = path.count
-                if distance == targetDis {
-                    targets.append((enemy, path))
-                } else if distance < targetDis {
-                    targets = [(enemy, path)]
-                    targetDis = distance
-                }
-            }
-        }
-        
-        //move
-        if targetDis > 0 && targets.count > 0 {
-            targets.sort(by: readOrder)
-            let mvTarget = targets[0].1.first!
-            
-            world[y][x] = "."
-            x = mvTarget.0
-            y = mvTarget.1
-            world[y][x] = type
-            targetDis -= 1
-        }
-        
-        //attack
-        if targetDis == 0 && targets.count > 0 {
-            var option = targets.map{$0.0}
-            option.sort{$0.hp != $1.hp ? $0.hp < $1.hp : ($0.y == $1.y ? $0.x < $1.x : $0.y < $1.y)}
-            return option[0].hit(world: &world)
-        }
-        return nil
+    travelMap[y][x] = path.count
+    if world[y-1][x] == "." {
+        var newPath = path
+        newPath.append((x, y-1))
+        traversMapFor(x: x, y: y-1, world: world, path: newPath)
+    }
+    if world[y][x-1] == "." {
+        var newPath = path
+        newPath.append((x-1, y))
+        traversMapFor(x: x-1, y: y, world: world, path: newPath)
+    }
+    if world[y][x+1] == "." {
+        var newPath = path
+        newPath.append((x+1, y))
+        traversMapFor(x: x+1, y: y, world: world, path: newPath)
+    }
+    if world[y+1][x] == "." {
+        var newPath = path
+        newPath.append((x, y+1))
+        traversMapFor(x: x, y: y+1, world: world, path: newPath)
     }
 }
 
@@ -241,36 +199,40 @@ for line in world {
     print(line)
 }
 var round = 0
-while (elves.count > 0 && goblins.count > 0) {
-    //do iter
-    var orderedThings = elves + goblins
-    orderedThings.sort(by: readOrder)
-
-    var killed = [Int]()
-    for thing in orderedThings {
-        if killed.contains(thing.id) { continue }
-        print("start \(thing.id)")
-        let aliveElves = elves.filter{!killed.contains($0.id)}
-        let aliveGoblins = goblins.filter{!killed.contains($0.id)}
-        if let kill = thing.takeTurn(elves: aliveElves, goblins: aliveGoblins, world: &world) {
-            print("KILLED \(kill)")
-            killed.append(kill)
-        }
-    }
-    for kill in killed {
-        if let index = elves.firstIndex(where: {kill == $0.id}) {
-            elves.remove(at: index)
-        }
-        if let index = goblins.firstIndex(where: {kill == $0.id}) {
-            goblins.remove(at: index)
-        }
-    }
-
-    round += 1
-    print("\nAfter Round \(round)")
-    print(elves)
-    print(goblins)
-    for line in world {
-        print(line)
-    }
+print("")
+for line in travelMapfor(x: 11, y: 2, world: world) {
+    print(line)
 }
+//while (elves.count > 0 && goblins.count > 0) {
+//    //do iter
+//    var orderedThings = elves + goblins
+//    orderedThings.sort(by: readOrder)
+//
+//    var killed = [Int]()
+//    for thing in orderedThings {
+//        if killed.contains(thing.id) { continue }
+//        print("start \(thing.id)")
+//        let aliveElves = elves.filter{!killed.contains($0.id)}
+//        let aliveGoblins = goblins.filter{!killed.contains($0.id)}
+//        if let kill = thing.takeTurn(elves: aliveElves, goblins: aliveGoblins, world: &world) {
+//            print("KILLED \(kill)")
+//            killed.append(kill)
+//        }
+//    }
+//    for kill in killed {
+//        if let index = elves.firstIndex(where: {kill == $0.id}) {
+//            elves.remove(at: index)
+//        }
+//        if let index = goblins.firstIndex(where: {kill == $0.id}) {
+//            goblins.remove(at: index)
+//        }
+//    }
+//
+//    round += 1
+//    print("\nAfter Round \(round)")
+//    print(elves)
+//    print(goblins)
+//    for line in world {
+//        print(line)
+//    }
+//}
