@@ -14,6 +14,7 @@ class Thing : CustomStringConvertible {
     var x : Int
     var y : Int
     var hp = 200
+    static var elfPower = 3
     
     init(id: Int, type: String, x: Int, y: Int) {
         self.id = id
@@ -31,7 +32,11 @@ class Thing : CustomStringConvertible {
     }
     
     func hit(world: inout [[String]]) -> Int? {
-        hp -= 3
+        if type == "E" {
+            hp -= 3
+        } else {
+            hp -= Thing.elfPower
+        }
         if hp < 0 {
             world[y][x] = "."
             return id
@@ -46,8 +51,8 @@ class Thing : CustomStringConvertible {
     func takeTurn(elves: [Thing], goblins: [Thing], world: inout [[String]]) -> Int? {
         //select target
         var enemies = type == "G" ? elves : goblins
-        var targets = [(Thing, [(Int,Int)])]()
-        var targetDis = Int.max - 1
+        var targets = [(Thing, (Int,Int))]()
+        var targetDis = Int.max
         enemies.sort { (first, second) -> Bool in
             let dist1 = abs(first.x - x) + abs(first.y - y)
             let dist2 = abs(second.x - x) + abs(second.y - y)
@@ -55,29 +60,52 @@ class Thing : CustomStringConvertible {
         }
         
         //distance calculation needs to be done¬
-        
-        
+        let travelMap = travelMapfor(x: x, y: y, world: world)
         for enemy in enemies {
-            print("from \(self) to \(enemy) with max \(targetDis)")
-            if let path = path(from: self, to: enemy, withMaxMoves: targetDis, inWorld: world) {
-                let distance = path.count
-                if distance == targetDis {
-                    targets.append((enemy, path))
-                } else if distance < targetDis {
-                    targets = [(enemy, path)]
-                    targetDis = distance
+            let coords = [(enemy.x, enemy.y - 1),
+                          (enemy.x - 1, enemy.y),
+                          (enemy.x + 1, enemy.y),
+                          (enemy.x, enemy.y + 1)]
+            for (ex, ey) in coords {
+                if travelMap[ey][ex] < targetDis {
+                    targetDis = travelMap[ey][ex]
+                    targets = [(enemy, (ex, ey))]
+                } else if travelMap[ey][ex] == targetDis {
+                    targets.append((enemy, (ex, ey)))
                 }
             }
         }
         
-        //move
-        if targetDis > 0 && targets.count > 0 {
+        var path = [(Int, Int)]()
+        if targetDis > 0 && targetDis < Int.max {
             targets.sort(by: readOrder)
-            let mvTarget = targets[0].1.first!
-            
+            var (mx, my) = targets[0].1
+            //find path to chosen enemy
+            path.append((mx, my))
+            while travelMap[my][mx] > 1 {
+                let coords = [(mx, my - 1),
+                              (mx - 1, my),
+                              (mx + 1, my),
+                              (mx, my + 1)]
+                var selected = (0, 0)
+                var distance = Int.max
+                for (cx, cy) in coords {
+                    if distance > travelMap[cy][cx] {
+                        distance = travelMap[cy][cx]
+                        selected = (cx, cy)
+                    }
+                }
+                path.append(selected)
+                mx = selected.0
+                my = selected.1
+            }
+        }
+        
+        //move
+        if path.count > 0 {
             world[y][x] = "."
-            x = mvTarget.0
-            y = mvTarget.1
+            x = path.last!.0
+            y = path.last!.1
             world[y][x] = type
             targetDis -= 1
         }

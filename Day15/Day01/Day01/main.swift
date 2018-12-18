@@ -129,79 +129,110 @@ func readOrder(arg1: Thing, arg2: Thing) -> Bool {
     return arg1.y < arg2.y
 }
 
-func readOrder(arg1: (Thing, [(Int, Int)]), arg2: (Thing, [(Int, Int)])) -> Bool {
-    let tar1 = arg1.1.last!
-    let tar2 = arg2.1.last!
+func readOrder(arg1: (Thing, (Int, Int)), arg2: (Thing, (Int, Int))) -> Bool {
+    let tar1 = arg1.1
+    let tar2 = arg2.1
     if tar1.1 == tar2.1 {
         return tar1.0 < tar2.0
     }
     return tar1.1 < tar2.1
 }
 
-var elves = [Thing]()
-var goblins = [Thing]()
 
-var id = 0
-var y = 0
-content.enumerateLines { line, _ in
-    world.append([])
-    for (x, char) in line.enumerated() {
-        let spot = String(char)
-        switch spot {
-        case "G":
-            goblins.append(Thing(id: id, type: spot, x: x, y: y))
-        case "E":
-            elves.append(Thing(id: id, type: spot, x: x, y: y))
-        default:
-            break
-        }
-        world[y].append(spot)
-        id += 1
-    }
-    y += 1
-}
 
-print("\n\n")
-print(elves)
-print(goblins)
-for line in world {
-    print(line)
-}
-var round = 0
+//print("\n\n")
+//print(elves)
+//print(goblins)
+//for line in world {
+//    print(line)
+//}
 //print("")
 //for line in travelMapfor(x: 7, y: 9, world: world) {
 //    print(line)
 //}
-while (elves.count > 0 && goblins.count > 0) {
-    //do iter
-    var orderedThings = elves + goblins
-    orderedThings.sort(by: readOrder)
-
-    var killed = [Int]()
-    for thing in orderedThings {
-        if killed.contains(thing.id) { continue }
-        print("start \(thing.id)")
-        let aliveElves = elves.filter{!killed.contains($0.id)}
-        let aliveGoblins = goblins.filter{!killed.contains($0.id)}
-        if let kill = thing.takeTurn(elves: aliveElves, goblins: aliveGoblins, world: &world) {
-            print("KILLED \(kill)")
-            killed.append(kill)
+var midround = false
+var elfdeath = 1
+var round = 0
+var elves = [Thing]()
+var goblins = [Thing]()
+while elfdeath > 0 {
+    
+    var id = 0
+    var y = 0
+    round = 0
+    elves = []
+    goblins = []
+    world = []
+    content.enumerateLines { line, _ in
+        world.append([])
+        for (x, char) in line.enumerated() {
+            let spot = String(char)
+            switch spot {
+            case "G":
+                goblins.append(Thing(id: id, type: spot, x: x, y: y))
+            case "E":
+                elves.append(Thing(id: id, type: spot, x: x, y: y))
+            default:
+                break
+            }
+            world[y].append(spot)
+            id += 1
         }
+        y += 1
     }
-    for kill in killed {
-        if let index = elves.firstIndex(where: {kill == $0.id}) {
-            elves.remove(at: index)
+    
+    elfdeath = 0
+    Thing.elfPower += 1
+    print("trying \(Thing.elfPower)")
+    while (elfdeath == 0 && elves.count > 0 && goblins.count > 0) {
+        //do iter
+        var orderedThings = elves + goblins
+        orderedThings.sort(by: readOrder)
+        midround = false
+        var killed = [Int]()
+        for thing in orderedThings {
+            if killed.contains(thing.id) { continue }
+            let aliveElves = elves.filter{!killed.contains($0.id)}
+            let aliveGoblins = goblins.filter{!killed.contains($0.id)}
+            if aliveElves.count == 0 || aliveGoblins.count == 0 {
+                midround = true
+                break
+            }
+            if let kill = thing.takeTurn(elves: aliveElves, goblins: aliveGoblins, world: &world) {
+                killed.append(kill)
+            }
         }
-        if let index = goblins.firstIndex(where: {kill == $0.id}) {
-            goblins.remove(at: index)
+        for kill in killed {
+            if let index = elves.firstIndex(where: {kill == $0.id}) {
+                elfdeath += 1
+                elves.remove(at: index)
+            }
+            if let index = goblins.firstIndex(where: {kill == $0.id}) {
+                goblins.remove(at: index)
+            }
         }
-    }
 
-    round += 1
-    print("\nAfter Round \(round)")
-    print(elves)
-    print(goblins)
-    for line in world {
-        print(line)
+        round += 1
+        //    print(elves)
+        //    print(goblins)
+        //    for line in world {
+        //        print(line)
+        //    }
     }
 }
+
+let goblinHP = goblins.reduce(0) { (hp, thing) -> Int in
+    return hp + thing.hp
+}
+
+let elfHP = elves.reduce(0) { (hp, thing) -> Int in
+    return hp + thing.hp
+}
+if midround {
+    print("Midround: \(round)")
+} else {
+    print("After: \(round)")
+}
+print("\nGoblin HP: \(goblinHP)")
+print("\nElf HP: \(elfHP)")
+print("\nElf Power: \(Thing.elfPower)")
