@@ -7,92 +7,6 @@ let content = try String(contentsOf: url, encoding: String.Encoding.utf8)
 
 var world = [[String]]()
 
-var traveled = [[Int]]()
-var bestPath : [(Int, Int)]? = nil
-var bestPathLength = Int.max
-var suggestedTarget = [(Int, Int)]()
-
-func path(from: Thing, to: Thing, withMaxMoves: Int, inWorld: [[String]], pathSoFar: [(Int, Int)] = []) -> [(Int, Int)]? {
-    if pathSoFar.count == 0 {
-        bestPath = nil
-        bestPathLength = Int.max
-        traveled = []
-        for (y, line) in world.enumerated() {
-            traveled.append([])
-            for _ in line {
-                traveled[y].append(Int.max)
-            }
-        }
-    }
-    
-    if traveled[from.y][from.x] < pathSoFar.count {
-        return nil
-    } else {
-        traveled[from.y][from.x] = pathSoFar.count
-    }
-    
-    let distance = abs(to.x - from.x) + abs(to.y - from.y)
-    if distance == 1 {
-        return pathSoFar
-    } else if !to.targetable(world: inWorld) {
-        return nil
-    } else if distance > withMaxMoves || distance > bestPathLength {
-        return nil
-    } else if pathSoFar.count > bestPathLength || pathSoFar.count > withMaxMoves {
-        return nil
-    } else {
-        if inWorld[from.y - 1][from.x] == "." {
-            let fromCopy = from.copy()
-            fromCopy.y -= 1
-            if !pathSoFar.contains(where: {$0.0 == fromCopy.x && $0.1 == fromCopy.y}) {
-                if let tryPath = path(from: fromCopy, to: to, withMaxMoves: withMaxMoves, inWorld: inWorld, pathSoFar: pathSoFar + [(fromCopy.x, fromCopy.x)]) {
-                    if tryPath.count < bestPathLength {
-                        bestPath = tryPath
-                        bestPathLength = tryPath.count
-                    }
-                }
-            }
-        }
-        if inWorld[from.y][from.x - 1] == "." {
-            let fromCopy = from.copy()
-            fromCopy.x -= 1
-            if !pathSoFar.contains(where: {$0.0 == fromCopy.x && $0.1 == fromCopy.y}) {
-                if let tryPath = path(from: fromCopy, to: to, withMaxMoves: withMaxMoves, inWorld: inWorld, pathSoFar: pathSoFar + [(fromCopy.x, fromCopy.x)]) {
-                    if tryPath.count < bestPathLength {
-                        bestPath = tryPath
-                        bestPathLength = tryPath.count
-                    }
-                }
-            }
-        }
-        if inWorld[from.y][from.x + 1] == "." {
-            let fromCopy = from.copy()
-            fromCopy.x += 1
-            if !pathSoFar.contains(where: {$0.0 == fromCopy.x && $0.1 == fromCopy.y}) {
-                if let tryPath = path(from: fromCopy, to: to, withMaxMoves: withMaxMoves, inWorld: inWorld, pathSoFar: pathSoFar + [(fromCopy.x, fromCopy.x)]) {
-                    if tryPath.count < bestPathLength {
-                        bestPath = tryPath
-                        bestPathLength = tryPath.count
-                    }
-                }
-            }
-        }
-        if inWorld[from.y + 1][from.x] == "." {
-            let fromCopy = from.copy()
-            fromCopy.y += 1
-            if !pathSoFar.contains(where: {$0.0 == fromCopy.x && $0.1 == fromCopy.y}) {
-                if let tryPath = path(from: fromCopy, to: to, withMaxMoves: withMaxMoves, inWorld: inWorld, pathSoFar: pathSoFar + [(fromCopy.x, fromCopy.x)]) {
-                    if tryPath.count < bestPathLength {
-                        bestPath = tryPath
-                        bestPathLength = tryPath.count
-                    }
-                }
-            }
-        }
-    }
-    return bestPath
-}
-
 var travelMap = [[Int]]()
 func travelMapfor(x: Int, y: Int, world: [[String]]) -> [[Int]] {
     travelMap = []
@@ -138,18 +52,6 @@ func readOrder(arg1: (Thing, (Int, Int)), arg2: (Thing, (Int, Int))) -> Bool {
     return tar1.1 < tar2.1
 }
 
-
-
-//print("\n\n")
-//print(elves)
-//print(goblins)
-//for line in world {
-//    print(line)
-//}
-//print("")
-//for line in travelMapfor(x: 7, y: 9, world: world) {
-//    print(line)
-//}
 var midround = false
 var elfdeath = 1
 var round = 0
@@ -213,11 +115,6 @@ while elfdeath > 0 {
         }
 
         round += 1
-        //    print(elves)
-        //    print(goblins)
-        //    for line in world {
-        //        print(line)
-        //    }
     }
 }
 

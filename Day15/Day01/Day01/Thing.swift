@@ -23,10 +23,6 @@ class Thing : CustomStringConvertible {
         self.y = y
     }
     
-    func copy() -> Thing {
-        return Thing(id: id, type: type, x: x, y: y)
-    }
-    
     var description: String {
         return "\(type)\(id) at (\(x), \(y)) with \(hp)"
     }
@@ -42,10 +38,6 @@ class Thing : CustomStringConvertible {
             return id
         }
         return nil
-    }
-    
-    func targetable(world: [[String]]) -> Bool {
-        return world[y-1][x] == "." || world[y][x-1] == "." || world[y][x+1] == "." || world[y+1][x] == "."
     }
     
     func takeTurn(elves: [Thing], goblins: [Thing], world: inout [[String]]) -> Int? {
