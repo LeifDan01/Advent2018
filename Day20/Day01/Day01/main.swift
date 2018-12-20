@@ -1,7 +1,7 @@
 import Foundation
 
 let currentDirectoryURL = URL(fileURLWithPath: "///Users/leif/Desktop/AdventOfCode/Day20/")
-let url = URL(fileURLWithPath: "input.txt", relativeTo: currentDirectoryURL)
+let url = URL(fileURLWithPath: "test3.txt", relativeTo: currentDirectoryURL)
 //let fileURL = Bundle.main.url(forResource: "input", withExtension: "txt")
 var content = try String(contentsOf: url, encoding: String.Encoding.utf8)
 
@@ -27,14 +27,12 @@ class Room : CustomStringConvertible {
 
 var startRoom = Room(x: 0, y: 0)
 var rooms : [String : Room] = ["0 0" : startRoom]
-var splitCount = 0
 func parse(cRoom: Room, path: String) {
     if path == "" { return }
     guard let first = path.first  else { return }
     let nextPath = String(path.dropFirst())
     switch first {
     case "(":
-        splitCount += 1
         var paths = [String]()
         var deep = 0
         var cPath = ""
@@ -48,8 +46,6 @@ func parse(cRoom: Room, path: String) {
                     paths.append(cPath)
                     let startIndex = nextPath.index(nextPath.startIndex, offsetBy: index + 1)
                     let finalPath = nextPath[startIndex..<nextPath.endIndex]
-                    print("\nSplit \(splitCount) with \(finalPath.count) character after")
-                    print(finalPath)
                     for path in paths {
                         parse(cRoom: cRoom, path: "\(path)\(finalPath)")
                     }
