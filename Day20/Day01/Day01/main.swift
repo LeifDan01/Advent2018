@@ -1,7 +1,7 @@
 import Foundation
 
 let currentDirectoryURL = URL(fileURLWithPath: "///Users/leif/Desktop/AdventOfCode/Day20/")
-let url = URL(fileURLWithPath: "test3.txt", relativeTo: currentDirectoryURL)
+let url = URL(fileURLWithPath: "input.txt", relativeTo: currentDirectoryURL)
 //let fileURL = Bundle.main.url(forResource: "input", withExtension: "txt")
 var content = try String(contentsOf: url, encoding: String.Encoding.utf8)
 
@@ -27,16 +27,82 @@ class Room : CustomStringConvertible {
 
 var startRoom = Room(x: 0, y: 0)
 var rooms : [String : Room] = ["0 0" : startRoom]
-func parse(cRoom: Room, path: String) {
-    if path == "" { return }
-    guard let first = path.first  else { return }
-    let nextPath = String(path.dropFirst())
-    switch first {
-    case "(":
+func parse(sRoom: Room, path: String) {
+    let nextSwitch = path.firstIndex(of: "(")
+    let travel = path[path.startIndex..<(nextSwitch ?? path.endIndex)]
+    var cRoom = sRoom
+    for entry in travel {
+        switch entry {
+        case "N":
+            if let nRoom = cRoom.n {
+                cRoom = nRoom
+            } else if let nRoom = rooms["\(cRoom.x) \(cRoom.y+1)"]  { // rooms.first(where: {$0.x == cRoom.x && $0.y == cRoom.y+1}) {
+                cRoom.n = nRoom
+                nRoom.s = cRoom
+                cRoom = nRoom
+            } else {
+                let nRoom = Room(x: cRoom.x, y: cRoom.y+1)
+                cRoom.n = nRoom
+                nRoom.s = cRoom
+                rooms["\(cRoom.x) \(cRoom.y+1)"] = nRoom
+                cRoom = nRoom
+                print("newRoom \(nRoom)")
+            }
+        case "E":
+            if let nRoom = cRoom.e {
+                cRoom = nRoom
+            } else if let nRoom = rooms["\(cRoom.x+1) \(cRoom.y)"]  { // rooms.first(where: {$0.x == cRoom.x+1 && $0.y == cRoom.y})  {
+                cRoom.e = nRoom
+                nRoom.w = cRoom
+                cRoom = nRoom
+            } else {
+                let nRoom = Room(x: cRoom.x+1, y: cRoom.y)
+                cRoom.e = nRoom
+                nRoom.w = cRoom
+                rooms["\(cRoom.x+1) \(cRoom.y)"] = nRoom
+                cRoom = nRoom
+                print("newRoom \(nRoom)")
+            }
+        case "S":
+            if let nRoom = cRoom.s {
+                cRoom = nRoom
+            } else if let nRoom = rooms["\(cRoom.x) \(cRoom.y-1)"]  { // rooms.first(where: {$0.x == cRoom.x && $0.y == cRoom.y-1})  {
+                cRoom.s = nRoom
+                nRoom.n = cRoom
+                cRoom = nRoom
+            } else {
+                let nRoom = Room(x: cRoom.x, y: cRoom.y-1)
+                cRoom.s = nRoom
+                nRoom.n = cRoom
+                rooms["\(cRoom.x) \(cRoom.y-1)"] = nRoom
+                cRoom = nRoom
+                print("newRoom \(nRoom)")
+            }
+        case "W":
+            if let nRoom = cRoom.w {
+                cRoom = nRoom
+            } else if let nRoom = rooms["\(cRoom.x-1) \(cRoom.y)"]  { // rooms.first(where: {$0.x == cRoom.x-1 && $0.y == cRoom.y})  {
+                cRoom.w = nRoom
+                nRoom.e = cRoom
+                cRoom = nRoom
+            } else {
+                let nRoom = Room(x: cRoom.x-1, y: cRoom.y)
+                cRoom.w = nRoom
+                nRoom.e = cRoom
+                rooms["\(cRoom.x-1) \(cRoom.y)"] = nRoom
+                cRoom = nRoom
+                print("newRoom \(nRoom)")
+            }
+        default:
+            break
+        }
+    }
+    if let nextSwitch = nextSwitch {
+        let travers = String(path[nextSwitch..<path.endIndex].dropFirst())
         var paths = [String]()
         var deep = 0
         var cPath = ""
-        for (index, char) in nextPath.enumerated() {
+        for (index, char) in travers.enumerated() {
             switch char {
             case "(":
                 deep += 1
@@ -44,10 +110,10 @@ func parse(cRoom: Room, path: String) {
             case ")":
                 if deep == 0 {
                     paths.append(cPath)
-                    let startIndex = nextPath.index(nextPath.startIndex, offsetBy: index + 1)
-                    let finalPath = nextPath[startIndex..<nextPath.endIndex]
+                    let startIndex = travers.index(travers.startIndex, offsetBy: index + 1)
+                    let finalPath = travers[startIndex..<travers.endIndex]
                     for path in paths {
-                        parse(cRoom: cRoom, path: "\(path)\(finalPath)")
+                        parse(sRoom: cRoom, path: path + finalPath)
                     }
                     return
                 } else {
@@ -65,58 +131,9 @@ func parse(cRoom: Room, path: String) {
                 cPath += String(char)
             }
         }
-    case "N":
-        if let nRoom = rooms["\(cRoom.x) \(cRoom.y+1)"]  { // rooms.first(where: {$0.x == cRoom.x && $0.y == cRoom.y+1}) {
-            cRoom.n = nRoom
-            nRoom.s = cRoom
-            parse(cRoom: nRoom, path: nextPath)
-        } else {
-            let nRoom = Room(x: cRoom.x, y: cRoom.y+1)
-            cRoom.n = nRoom
-            nRoom.s = cRoom
-            rooms["\(cRoom.x) \(cRoom.y+1)"] = nRoom
-            parse(cRoom: nRoom, path: nextPath)
-        }
-    case "E":
-        if let nRoom = rooms["\(cRoom.x+1) \(cRoom.y)"]  { // rooms.first(where: {$0.x == cRoom.x+1 && $0.y == cRoom.y})  {
-            cRoom.e = nRoom
-            nRoom.w = cRoom
-            parse(cRoom: nRoom, path: nextPath)
-        } else {
-            let nRoom = Room(x: cRoom.x+1, y: cRoom.y)
-            cRoom.e = nRoom
-            nRoom.w = cRoom
-            rooms["\(cRoom.x+1) \(cRoom.y)"] = nRoom
-            parse(cRoom: nRoom, path: nextPath)
-        }
-    case "S":
-        if let nRoom = rooms["\(cRoom.x) \(cRoom.y-1)"]  { // rooms.first(where: {$0.x == cRoom.x && $0.y == cRoom.y-1})  {
-            cRoom.s = nRoom
-            nRoom.n = cRoom
-            parse(cRoom: nRoom, path: nextPath)
-        } else {
-            let nRoom = Room(x: cRoom.x, y: cRoom.y-1)
-            cRoom.s = nRoom
-            nRoom.n = cRoom
-            rooms["\(cRoom.x) \(cRoom.y-1)"] = nRoom
-            parse(cRoom: nRoom, path: nextPath)
-        }
-    case "W":
-        if let nRoom = rooms["\(cRoom.x-1) \(cRoom.y)"]  { // rooms.first(where: {$0.x == cRoom.x-1 && $0.y == cRoom.y})  {
-            cRoom.w = nRoom
-            nRoom.e = cRoom
-            parse(cRoom: nRoom, path: nextPath)
-        } else {
-            let nRoom = Room(x: cRoom.x-1, y: cRoom.y)
-            cRoom.w = nRoom
-            nRoom.e = cRoom
-            rooms["\(cRoom.x-1) \(cRoom.y)"] = nRoom
-            parse(cRoom: nRoom, path: nextPath)
-        }
-    default:
-        break
     }
 }
+
 func findDistances(cRoom: Room, steps: Int = 1) {
     var rooms = [Room]()
     for r in [cRoom.n, cRoom.e, cRoom.s, cRoom.w] {
@@ -130,7 +147,7 @@ func findDistances(cRoom: Room, steps: Int = 1) {
     }
 }
 
-parse(cRoom: startRoom, path: String(content.dropFirst().dropLast()))
+parse(sRoom: startRoom, path: String(content.dropFirst().dropLast()))
 print("Found \(rooms.count) rooms")
 
 startRoom.distance = 0
@@ -161,7 +178,7 @@ for room in result {
         bottom = ""
         y = room.value.y
     }
-
+    
     top += "#" + (room.value.n == nil ? "#" : "-") + "#"
     sides += (room.value.w == nil ? "#" : "|") + "." + (room.value.e == nil ? "#" : "|")
     bottom += "#" + (room.value.s == nil ? "#" : "-") + "#"
