@@ -1,7 +1,7 @@
 import Foundation
 
 let currentDirectoryURL = URL(fileURLWithPath: "///Users/leif/Desktop/AdventOfCode/Day20/")
-let url = URL(fileURLWithPath: "input.txt", relativeTo: currentDirectoryURL)
+let url = URL(fileURLWithPath: "test.txt", relativeTo: currentDirectoryURL)
 //let fileURL = Bundle.main.url(forResource: "input", withExtension: "txt")
 var content = try String(contentsOf: url, encoding: String.Encoding.utf8)
 
@@ -27,12 +27,15 @@ class Room : CustomStringConvertible {
 
 var startRoom = Room(x: 0, y: 0)
 var rooms : [String : Room] = ["0 0" : startRoom]
-func parse(sRoom: Room, path: String) {
-    let nextSwitch = path.firstIndex(of: "(")
-    let travel = path[path.startIndex..<(nextSwitch ?? path.endIndex)]
+func parse(sRoom: Room, from: String.Index, finish: String.Index? = nil) {
+    var nextSwitch: String.Index?
     var cRoom = sRoom
-    for entry in travel {
-        switch entry {
+    for index in content.characters.indices[from..<content.endIndex] {
+        if nextSwitch != nil { break }
+        switch content[index] {
+        case "(":
+            nextSwitch = index
+            break;
         case "N":
             if let nRoom = cRoom.n {
                 cRoom = nRoom
@@ -93,42 +96,39 @@ func parse(sRoom: Room, path: String) {
                 cRoom = nRoom
                 print("newRoom \(nRoom)")
             }
+        case "|":
+            if let finish = finish {
+                parse(sRoom: cRoom, from: finish)
+            }
+            return
         default:
             break
         }
     }
     if let nextSwitch = nextSwitch {
-        let travers = String(path[nextSwitch..<path.endIndex].dropFirst())
-        var paths = [String]()
-        var deep = 0
-        var cPath = ""
-        for (index, char) in travers.enumerated() {
-            switch char {
+        var paths = [String.Index]()
+        var deep = -1
+        for index in content.characters.indices[nextSwitch..<content.endIndex] {
+            switch content[index] {
             case "(":
                 deep += 1
-                cPath += String(char)
+                if deep == 0 {
+                    paths.append(content.index(index, offsetBy: 1))
+                }
             case ")":
                 if deep == 0 {
-                    paths.append(cPath)
-                    let startIndex = travers.index(travers.startIndex, offsetBy: index + 1)
-                    let finalPath = travers[startIndex..<travers.endIndex]
                     for path in paths {
-                        parse(sRoom: cRoom, path: path + finalPath)
+                        parse(sRoom: cRoom, from: path, finish: content.index(index, offsetBy: 1))
                     }
                     return
-                } else {
-                    cPath += String(char)
                 }
                 deep -= 1
             case "|":
                 if deep == 0 {
-                    paths.append(cPath)
-                    cPath = ""
-                } else {
-                    cPath += String(char)
+                    paths.append(content.index(index, offsetBy: 1))
                 }
             default:
-                cPath += String(char)
+                break
             }
         }
     }
@@ -147,7 +147,7 @@ func findDistances(cRoom: Room, steps: Int = 1) {
     }
 }
 
-parse(sRoom: startRoom, path: String(content.dropFirst().dropLast()))
+parse(sRoom: startRoom, from: content.index(content.startIndex, offsetBy: 1))
 print("Found \(rooms.count) rooms")
 
 startRoom.distance = 0
