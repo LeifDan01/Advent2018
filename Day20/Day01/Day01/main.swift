@@ -1,9 +1,9 @@
 import Foundation
 
 let currentDirectoryURL = URL(fileURLWithPath: "///Users/leif/Desktop/AdventOfCode/Day20/")
-let url = URL(fileURLWithPath: "test.txt", relativeTo: currentDirectoryURL)
+let url = URL(fileURLWithPath: "input.txt", relativeTo: currentDirectoryURL)
 //let fileURL = Bundle.main.url(forResource: "input", withExtension: "txt")
-var content = try String(contentsOf: url, encoding: String.Encoding.utf8)
+let content = try String(contentsOf: url, encoding: String.Encoding.utf8)
 
 class Room : CustomStringConvertible {
     var x : Int
@@ -30,7 +30,7 @@ var rooms : [String : Room] = ["0 0" : startRoom]
 func parse(sRoom: Room, from: String.Index, finish: String.Index? = nil) {
     var nextSwitch: String.Index?
     var cRoom = sRoom
-    for index in content.characters.indices[from..<content.endIndex] {
+    for index in content.indices[from..<content.endIndex] {
         if nextSwitch != nil { break }
         switch content[index] {
         case "(":
@@ -43,6 +43,7 @@ func parse(sRoom: Room, from: String.Index, finish: String.Index? = nil) {
                 cRoom.n = nRoom
                 nRoom.s = cRoom
                 cRoom = nRoom
+                print("newDoor")
             } else {
                 let nRoom = Room(x: cRoom.x, y: cRoom.y+1)
                 cRoom.n = nRoom
@@ -58,6 +59,7 @@ func parse(sRoom: Room, from: String.Index, finish: String.Index? = nil) {
                 cRoom.e = nRoom
                 nRoom.w = cRoom
                 cRoom = nRoom
+                print("newDoor")
             } else {
                 let nRoom = Room(x: cRoom.x+1, y: cRoom.y)
                 cRoom.e = nRoom
@@ -73,6 +75,7 @@ func parse(sRoom: Room, from: String.Index, finish: String.Index? = nil) {
                 cRoom.s = nRoom
                 nRoom.n = cRoom
                 cRoom = nRoom
+                print("newDoor")
             } else {
                 let nRoom = Room(x: cRoom.x, y: cRoom.y-1)
                 cRoom.s = nRoom
@@ -88,6 +91,7 @@ func parse(sRoom: Room, from: String.Index, finish: String.Index? = nil) {
                 cRoom.w = nRoom
                 nRoom.e = cRoom
                 cRoom = nRoom
+                print("newDoor")
             } else {
                 let nRoom = Room(x: cRoom.x-1, y: cRoom.y)
                 cRoom.w = nRoom
@@ -96,6 +100,8 @@ func parse(sRoom: Room, from: String.Index, finish: String.Index? = nil) {
                 cRoom = nRoom
                 print("newRoom \(nRoom)")
             }
+        case ")":
+            fallthrough
         case "|":
             if let finish = finish {
                 parse(sRoom: cRoom, from: finish)
@@ -108,7 +114,7 @@ func parse(sRoom: Room, from: String.Index, finish: String.Index? = nil) {
     if let nextSwitch = nextSwitch {
         var paths = [String.Index]()
         var deep = -1
-        for index in content.characters.indices[nextSwitch..<content.endIndex] {
+        for index in content.indices[nextSwitch..<content.endIndex] {
             switch content[index] {
             case "(":
                 deep += 1
